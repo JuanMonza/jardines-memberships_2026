@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación de Membresía - Jardines del Renacer</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/webp" href="assets/logo-tarjetas.webp">
+    <!-- Carga de Tailwind CSS para un diseño rápido y responsive -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos 3D Animated -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Configuración de Tailwind con colores corporativos -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'jardines-blue': '#3957b8', // Azul corporativo principal
+                        'jardines-light-blue': '#5a7bc9', // Azul medio claro
+                        'jardines-gold': '#D4AF37', // Dorado corporativo
+                        'jardines-dark': '#2a3f8a', // Azul oscuro
+                        'active-status': '#22C55E', // Verde activo
+                        'inactive-status': '#DC2626', // Rojo inactivo
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gradient-to-br from-jardines-dark via-jardines-blue to-jardines-light-blue min-h-screen font-sans">
+
+    <!-- Contenedor Principal -->
+    <div class="container mx-auto px-4 py-8">
+        
+        <!-- Encabezado -->
+        <header class="text-center mb-12">
+            <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-2xl max-w-md mx-auto">
+                <!-- Logo Oficial -->
+                <img src="assets/logo-oficial.webp" alt="Jardines del Renacer" class="mx-auto h-24 md:h-32 mb-3 object-contain">
+                <p class="text-jardines-gold text-lg md:text-xl font-semibold">Club de Aliados</p>
+                <p class="text-white/80 text-sm md:text-base mt-1">Sistema de Verificación de Membresía</p>
+            </div>
+        </header>
+
+        <!-- Formulario de Verificación -->
+        <div id="verification-form" class="max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl p-8 mb-8">
+            <h2 class="text-2xl font-bold text-jardines-blue mb-6 flex items-center">
+                <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Verificar Mi Membresía
+            </h2>
+            
+            <div class="mb-6">
+                <label for="cedula-input" class="block text-sm font-semibold text-gray-700 mb-3">
+                    Número de Cédula
+                </label>
+                <input 
+                    type="text" 
+                    id="cedula-input" 
+                    placeholder="Ej: 1234567890"
+                    class="w-full p-4 text-lg border-2 border-jardines-blue/30 rounded-xl focus:ring-4 focus:ring-jardines-blue/20 focus:border-jardines-blue transition-all"
+                    maxlength="10"
+                >
+            </div>
+
+            <button 
+                onclick="verificarMembresia()" 
+                class="w-full bg-jardines-blue hover:bg-jardines-dark text-white font-bold py-4 px-6 rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg flex items-center justify-center"
+            >
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                Buscar Afiliados
+            </button>
+        </div>
+
+        <!-- Resultados de la Búsqueda -->
+        <div id="results-container" class="max-w-4xl mx-auto hidden">
+            <h3 class="text-2xl font-bold text-white mb-6 text-center">
+                Membresía Encontrada
+            </h3>
+            
+            <!-- Tarjetas de Membresía Visuales -->
+            <div id="membership-cards" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Las tarjetas visuales de membresía se insertarán aquí -->
+            </div>
+        </div>
+
+        <!-- Mensaje cuando no hay resultados -->
+        <div id="no-results" class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-8 text-center hidden">
+            <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <h3 class="text-xl font-bold text-gray-700 mb-2">No se encontraron afiliados</h3>
+            <p class="text-gray-600">Verifique el número de cédula e intente nuevamente</p>
+        </div>
+    </div>
+
+    <!-- Script principal -->
+    <script src="script.js"></script>
+</body>
+</html>

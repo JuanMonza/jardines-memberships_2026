@@ -1,0 +1,345 @@
+```
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║   🌺 JARDINES DEL RENACER - SISTEMA DE VALIDACIÓN DE MEMBRESÍAS 🌺       ║
+║                                                                            ║
+║                         ARQUITECTURA VISUAL V1.0                          ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          🌐 CAPA DE PRESENTACIÓN                            │
+│                              (VERCEL CDN)                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────────────┐      ┌──────────────────────────────┐        │
+│  │                         │      │                              │        │
+│  │  🔍 BÚSQUEDA PÚBLICA    │      │  🔐 PANEL ADMINISTRATIVO     │        │
+│  │  /public/index.html     │      │  /admin/                     │        │
+│  │                         │      │                              │        │
+│  │ • Ingresa cédula        │      │  /admin/login.html:          │        │
+│  │ • Ve datos permitidos   │      │  • Login seguro              │        │
+│  │ • Sin autenticación     │      │  • Email corporativo         │        │
+│  │ • UX responsive         │      │  • 2FA por código (email)    │        │
+│  │                         │      │  • Shield contraseña         │        │
+│  │ Datos mostrados:        │      │                              │        │
+│  │ • Nombre contratante    │      │  /admin/index.html:          │        │
+│  │ • ID Contrato           │      │  • Dashboard estadísticas    │        │
+│  │ • ID Persona            │      │  • Cargar Excel              │        │
+│  │ • Celular               │      │  • Gestionar contratantes    │        │
+│  │ • Edad actual           │      │  • Ver estados               │        │
+│  │ • Estado (✅/❌)        │      │  • Logs de actividad         │        │
+│  │ • Zona                  │      │                              │        │
+│  │ • Ciudad, Depto         │      │                              │        │
+│  │                         │      │                              │        │
+│  └──────────┬──────────────┘      └──────────────┬───────────────┘        │
+│             │                                    │                        │
+│             │ GET sin auth                       │ JWT requerido           │
+│             │ ?cedula=123...                     │ email corporativo       │
+│             │                                    │                        │
+│             └────────────────────┬───────────────┘                        │
+│                                  │                                        │
+└──────────────────────────────────┼────────────────────────────────────────┘
+                                   │
+                    ┌──────────────▼─────────────┐
+                    │    🚀 SERVERLESS FUNCTIONS │
+                    │      (VERCEL FUNCTIONS)    │
+                    │    TypeScript + Express    │
+                    ├────────────────────────────┤
+                    │                            │
+                    │  📤 POST /api/auth         │
+                    │   ├─ registro              │
+                    │   ├─ login_paso1 (creds)   │
+                    │   ├─ login_paso2 (2FA)     │
+                    │   └─ logout                │
+                    │                            │
+                    │  🔍 GET /api/contratantes  │
+                    │   └─ ?cedula=...           │
+                    │                            │
+                    │  📤 POST /api/upload       │
+                    │   └─ contratantes/excel    │
+                    │                            │
+                    └────────────────┬───────────┘
+                                     │
+                    ┌────────────────▼─────────────┐
+                    │     🔐 MIDDLEWARE           │
+                    │  • JWT Verification         │
+                    │  • Role Validation          │
+                    │  • Rate Limiting (Vercel)   │
+                    │  • CORS enabled             │
+                    │  • Helmet security          │
+                    └────────────────┬─────────────┘
+                                     │
+┌────────────────────────────────────▼──────────────────────────────────────┐
+│                      🗄️ SUPABASE PostgreSQL                               │
+│                      (BASE DE DATOS RELACIONAL)                           │
+├────────────────────────────────────────────────────────────────────────────┤
+│                                                                            │
+│  ┌─────────────────────────────┐      ┌──────────────────────────────┐   │
+│  │  📋 TABLA: admins           │      │  📋 TABLA: contratantes      │   │
+│  │  ─────────────────────────  │      │  ──────────────────────────  │   │
+│  │  id (UUID) PK               │      │  id (UUID) PK                │   │
+│  │  email (VARCHAR) UNIQUE     │      │  cedula (VARCHAR) UNIQUE     │   │
+│  │  password_hash (VARCHAR)    │      │  id_contrato (VARCHAR)       │   │
+│  │  nombre (VARCHAR)           │      │  nombre_contratante (VARCHAR)│   │
+│  │  rol (admin|supervisor)     │      │  id_persona (VARCHAR)        │   │
+│  │  codigo_2fa (VARCHAR)       │      │  celular (VARCHAR)           │   │
+│  │  codigo_2fa_expiry (TS)     │      │  email (VARCHAR)             │   │
+│  │  codigo_2fa_verificado (B)  │      │  edad_actual (INTEGER)       │   │
+│  │  activo (BOOLEAN)           │      │  fecha_nacimiento (DATE)     │   │
+│  │  ultimo_login (TIMESTAMP)   │      │  estado (VARCHAR)            │   │
+│  │  created_at (TIMESTAMP)     │      │  zona (VARCHAR) INDEX        │   │
+│  │  updated_at (TIMESTAMP)     │      │  ciudad (VARCHAR)            │   │
+│  │                             │      │  departamento (VARCHAR)      │   │
+│  │  🔒 RLS Enabled             │      │  direccion (TEXT)            │   │
+│  │  ✅ Índices: email          │      │  tipo_plan (VARCHAR)         │   │
+│  │                             │      │  fecha_afiliacion (TS)       │   │
+│  │  CHECK: email ends with     │      │  ultimo_pago (TIMESTAMP)     │   │
+│  │         @jardines...        │      │  deuda (DECIMAL)             │   │
+│  │                             │      │  cargado_por (UUID) FK       │   │
+│  │                             │      │  created_at (TIMESTAMP)      │   │
+│  │                             │      │  updated_at (TIMESTAMP)      │   │
+│  │                             │      │                              │   │
+│  │                             │      │  ✅ Índices:                 │   │
+│  │                             │      │     • cedula (PK)            │   │
+│  │                             │      │     • id_contrato            │   │
+│  │                             │      │     • estado                 │   │
+│  │                             │      │     • zona                   │   │
+│  │                             │      │                              │   │
+│  └─────────────────────────────┘      └──────────────────────────────┘   │
+│                                                                            │
+│  ┌──────────────────────────────────────┐                                │
+│  │  📋 TABLA: logs_acceso (AUDITORÍA)   │                                │
+│  │  ─────────────────────────────────   │                                │
+│  │  id (UUID) PK                        │                                │
+│  │  admin_id (UUID) FK → admins.id      │                                │
+│  │  tipo_accion (VARCHAR)               │                                │
+│  │  cedula_consultada (VARCHAR)         │                                │
+│  │  ip_address (INET)                   │                                │
+│  │  user_agent (TEXT)                   │                                │
+│  │  created_at (TIMESTAMP)              │                                │
+│  │                                      │                                │
+│  └──────────────────────────────────────┘                                │
+│                                                                            │
+│  🔐 SEGURIDAD:                                                           │
+│     • Row Level Security (RLS) activado                                  │
+│     • Validación de dominio de email                                     │
+│     • Constraints de integridad                                          │
+│     • Triggers para updated_at                                           │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                        🔄 FLUJOS PRINCIPALES                              ║
+╠════════════════════════════════════════════════════════════════════════════╣
+║                                                                            ║
+║  FLUJO 1: LOGIN ADMIN (2FA)                                               ║
+║  ─────────────────────────                                                ║
+║                                                                            ║
+║   Admin                    API                  Supabase       Email       ║
+║     │                       │                        │            │       ║
+║     ├─ email + password ──▶ │                        │            │       ║
+║     │                       ├─ Verificar en BD ────▶ │            │       ║
+║     │                       │ ◀──── user_found────── │            │       ║
+║     │                       │                        │            │       ║
+║     │                       ├─ Generar código ──────▶ │            │       ║
+║     │                       │ (6 dígitos, 10 min)    │            │       ║
+║     │                       │                        │            │       ║
+║     │                       ├─ Enviar por email ─────────────────▶│       ║
+║     │                       │ nodemailer + Gmail     │            │       ║
+║     │                       │ ◀──────código────────────────────── │       ║
+║     │                       │                        │            │       ║
+║     │ ◀─ Aceptar código ──┤                        │            │       ║
+║     │                       │                        │            │       ║
+║     ├─ código ────────────▶ │                        │            │       ║
+║     │                       ├─ Validar código ──────▶ │            │       ║
+║     │                       │ ◀────valid_ok───────── │            │       ║
+║     │                       │                        │            │       ║
+║     │                       ├─ Generar JWT ────────▶ │            │       ║
+║     │                       │ Marcar 2FA como OK     │            │       ║
+║     │                       │ ◀────token────────── │            │       ║
+║     │                       │                        │            │       ║
+║     │ ◀─ JWT Token ────────┤                        │            │       ║
+║     │                       │                        │            │       ║
+║     ├─ ✅ ACCESO CONFIRMADO │                        │            │       ║
+║                                                                            ║
+║  FLUJO 2: CARGA DE EXCEL                                                  ║
+║  ─────────────────────────                                                ║
+║                                                                            ║
+║   Admin              API               Supabase                            ║
+║     │                 │                     │                            ║
+║     ├─ Archivo.xlsx ─▶│                     │                            ║
+║     │ (con JWT)       │                     │                            ║
+║     │                 ├─ Parsear XLSX       │                            ║
+║     │                 │ (XLSX lib)          │                            ║
+║     │                 │                     │                            ║
+║     │                 ├─ Validar c/fila ────│                            ║
+║     │                 │ (Requeridos, tipos) │                            ║
+║     │                 │                     │                            ║
+║     │                 ├─ INSERT masivo ────▶│                            ║
+║     │                 │ contratantes        │                            ║
+║     │                 │ ◀─ resultado─────── │                            ║
+║     │                 │                     │                            ║
+║     │ ◀─ Resultado ───│                     │                            ║
+║     │   (100 ok,      │                     │                            ║
+║     │    2 error)     │                     │                            ║
+║     │                 │                     │                            ║
+║     ├─ ✅ DATOS CARGADOS                    │                            ║
+║                                                                            ║
+║  FLUJO 3: BÚSQUEDA PÚBLICA                                                ║
+║  ──────────────────────────                                               ║
+║                                                                            ║
+║   Usuario           API              Supabase                             ║
+║     │                │                   │                               ║
+║     ├─ cedula ──────▶│                   │                               ║
+║     │ (sin auth)     │                   │                               ║
+║     │                ├─ SELECT ─────────▶│                               ║
+║     │                │ WHERE cedula = x  │                               ║
+║     │                │ ◀─ contratante─── │                               ║
+║     │                │                   │                               ║
+║     │ ◀─ datos ──────│                   │                               ║
+║     │   permitidos   │                   │                               ║
+║     │   (sin email,  │                   │                               ║
+║     │    sin deuda)  │                   │                               ║
+║     │                │                   │                               ║
+║     ├─ ✅ DATOS MOSTRADOS                │                               ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                      📋 CHECKLIST DE COMPONENTES                          ║
+╠════════════════════════════════════════════════════════════════════════════╣
+║                                                                            ║
+║ FRONTEND                                  BACKEND                         ║
+║ ────────────────────────────              ────────────────────────────   ║
+║ ✅ /public/index.html                     ✅ api/auth.ts                 ║
+║    • Búsqueda por cédula                     • Registro                   ║
+║    • Muestra datos permitidos               • Login Paso 1               ║
+║    • Sin autenticación                      • Login Paso 2 (2FA)         ║
+║    • Responsive mobile                      • Logout                     ║
+║                                                                            ║
+║ ✅ /admin/login.html                      ✅ api/contratantes.ts         ║
+║    • Email corporativo                      • GET /contratantes          ║
+║    • Password con toggle                    • Búsqueda por cédula        ║
+║    • 2FA (6 dígitos)                        • Datos permitidos           ║
+║    • Validación JS                                                        ║
+║                                            ✅ api/upload.ts              ║
+║ ✅ /admin/index.html                         • POST upload               ║
+║    • Dashboard                              • Parsear Excel              ║
+║    • Cargar Excel                           • Validar y insertar         ║
+║    • Ver contratantes                       • Retornar resultado         ║
+║    • Estadísticas                                                         ║
+║    • Gestionar estados                    UTILIDADES                     ║
+║                                           ────────────────────────────   ║
+║ ESTILOS                                   ✅ src/lib/supabaseClient.ts   ║
+║ ────────────────────────────              ✅ src/utils/emailService.ts   ║
+║ ✅ Tailwind CSS                           ✅ src/utils/auth.ts           ║
+║    • Colores corporativos                  ✅ src/utils/excelParser.ts   ║
+║    • Responsive                                                           ║
+║    • Animaciones                          DATABASE                       ║
+║ ✅ Font Awesome                           ────────────────────────────   ║
+║    • Iconos profesionales                 ✅ schema (migrations.sql)      ║
+║    • Animaciones                          ✅ admins table                ║
+║                                            ✅ contratantes table         ║
+║                                            ✅ logs_acceso table          ║
+║                                            ✅ Índices optimizados        ║
+║                                            ✅ RLS configurado            ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+CONFIGURACIÓN SUPABASE
+──────────────────────
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Proyecto Supabase                                                       │
+│ ├─ Auth: Supabase Auth (nativo)                                        │
+│ ├─ Database: PostgreSQL                                               │
+│ ├─ Storage: No requerido (archivos temporales)                        │
+│ ├─ Realtime: No requerido                                             │
+│ ├─ Vector: No requerido                                               │
+│ └─ RLS: ✅ Habilitado en tablas sensibles                             │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+DESPLIEGUE EN VERCEL
+────────────────────
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Vercel Deployment                                                       │
+│ ├─ Frontend: Servido por CDN global                                   │
+│ ├─ API: Serverless Functions (Node.js runtime)                        │
+│ ├─ Environment: Variables de entorno configuradas                     │
+│ ├─ Domains: Dominio .vercel.app + personalizado                       │
+│ ├─ SSL: HTTPS automático                                              │
+│ ├─ Monitoring: Logs en tiempo real                                    │
+│ └─ CI/CD: Auto-deploy en cada push a main                             │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+SEGURIDAD
+─────────
+
+✅ PASSWORDS           bcrypt (10 salts)
+✅ JWT                 Expiración 24h, secret de 32+ caracteres
+✅ 2FA                 Código 6 dígitos, 10 min expiry, email validado
+✅ EMAIL DOMAIN        Solo @jardinesdelrenacer.co
+✅ HTTPS               Vercel + certificados Let's Encrypt
+✅ CORS                Configurado para dominios permitidos
+✅ HELMET              Headers de seguridad HTTP
+✅ DATABASE            RLS, constraints, índices
+✅ SECRETS             No hardcodeados, env variables
+✅ RATE LIMITING       Vercel built-in
+✅ VALIDATION          Input sanitization en API
+
+
+DEPENDENCIAS PRINCIPALES
+────────────────────────
+
+node_modules/
+├── @supabase/supabase-js    (DB client)
+├── express                  (API local)
+├── nodemailer              (Email service)
+├── jsonwebtoken            (JWT)
+├── bcryptjs                (Password hashing)
+├── xlsx                    (Excel parsing)
+├── cors                    (CORS middleware)
+├── helmet                  (Security headers)
+└── dotenv                  (Environment variables)
+
+
+ESTRUCTUA FINAL DE DESPLIEGUE
+──────────────────────────────
+
+        Internet
+           │
+           ▼
+    ┌─────────────┐
+    │   Vercel    │  ◀─ tu-proyecto.vercel.app
+    │   (Global)  │
+    │             │
+    ├─ Frontend   │ (HTML/CSS/JS)
+    ├─ API Routes │ (serverless fns)
+    └─ CDN        │ (imágenes, assets)
+           │
+           ├────▶ Supabase (BD)
+           │
+           ├────▶ Gmail (Email)
+           │
+           └────▶ GitHub (CI/CD)
+
+```
+
+---
+
+**🎉 Sistema Completo Listo para Producción**
+
+Documentación disponible en:
+- `QUICK_START.md` - Empeza aquí
+- `DEPLOYMENT_GUIDE.md` - Despliegue paso a paso  
+- `ARQUITECTURA.md` - Diagrama y flujos
+- `README.md` - Descripción general
+- `CHECKLIST.md` - Validaciones finales

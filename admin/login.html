@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Jardines del Renacer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'jardines-blue': '#3957b8',
+                        'jardines-dark': '#2a3f8a',
+                        'jardines-gold': '#D4AF37',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-jardines-dark via-jardines-blue to-blue-400 min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-md">
+        <!-- Card Login -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <div class="text-center mb-8">
+                <i class="fas fa-shield-alt text-jardines-blue text-5xl mb-4 block"></i>
+                <h1 class="text-2xl font-bold text-jardines-dark">Panel Administrativo</h1>
+                <p class="text-gray-600 text-sm mt-2">Jardines del Renacer</p>
+            </div>
+
+            <!-- Paso 1: Credenciales -->
+            <div id="paso1" class="space-y-4">
+                <h2 class="text-xl font-bold text-jardines-blue mb-4">Inicia Sesión</h2>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Email Corporativo</label>
+                    <input type="email" id="email" placeholder="nombre@jardinesdelrenacer.co" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-jardines-blue">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Contraseña</label>
+                    <div class="relative">
+                        <input type="password" id="password" placeholder="••••••••" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-jardines-blue">
+                        <button type="button" onclick="togglePassword()" class="absolute right-3 top-3 text-gray-600">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button onclick="loginPaso1()" class="w-full bg-jardines-blue text-white py-2 rounded-lg hover:bg-blue-700 font-bold mt-6">
+                    Continuar
+                </button>
+                <div id="error-paso1" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded"></div>
+            </div>
+
+            <!-- Paso 2: Verificación 2FA -->
+            <div id="paso2" class="hidden space-y-4">
+                <h2 class="text-xl font-bold text-jardines-blue mb-4">Verificación de Dos Factores</h2>
+                <p class="text-gray-600 text-sm mb-4">Hemos enviado un código a tu correo corporativo</p>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Código de Verificación</label>
+                    <input type="text" id="codigo-2fa" placeholder="000000" maxlength="6"
+                        class="w-full px-4 py-2 text-center text-2xl letter-spacing border-2 border-gray-300 rounded-lg focus:outline-none focus:border-jardines-blue"
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                </div>
+                <p class="text-gray-600 text-xs">⏰ El código expira en 10 minutos</p>
+                <button onclick="loginPaso2()" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 font-bold">
+                    Verificar
+                </button>
+                <button onclick="volverPaso1()" class="w-full bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 mt-2">
+                    Volver
+                </button>
+                <div id="error-paso2" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded"></div>
+            </div>
+        </div>
+
+        <p class="text-center text-white text-sm mt-4">
+            © 2026 Jardines del Renacer. Sistema Seguro.
+        </p>
+    </div>
+
+    <script>
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+        let adminIdTemp = null;
+
+        function togglePassword() {
+            const input = document.getElementById('password');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        async function loginPaso1() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                mostrarError('paso1', 'Email y contraseña son requeridos');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/auth`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, accion: 'login_paso1' })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    adminIdTemp = data.adminId;
+                    localStorage.setItem('tempToken', data.tempToken);
+                    document.getElementById('paso1').classList.add('hidden');
+                    document.getElementById('paso2').classList.remove('hidden');
+                } else {
+                    mostrarError('paso1', data.message);
+                }
+            } catch (error) {
+                mostrarError('paso1', 'Error de conexión: ' + error.message);
+            }
+        }
+
+        async function loginPaso2() {
+            const codigo = document.getElementById('codigo-2fa').value;
+
+            if (!codigo || codigo.length !== 6) {
+                mostrarError('paso2', 'Ingresa los 6 dígitos del código');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/auth`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminId: adminIdTemp, codigo, accion: 'login_paso2' })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('admin', JSON.stringify(data.admin));
+                    window.location.href = '/admin/dashboard.html';
+                } else {
+                    mostrarError('paso2', data.message);
+                }
+            } catch (error) {
+                mostrarError('paso2', 'Error de conexión: ' + error.message);
+            }
+        }
+
+        function volverPaso1() {
+            document.getElementById('paso2').classList.add('hidden');
+            document.getElementById('paso1').classList.remove('hidden');
+            document.getElementById('codigo-2fa').value = '';
+            limpiarError('paso2');
+        }
+
+        function mostrarError(paso, mensaje) {
+            const errorDiv = document.getElementById(`error-${paso}`);
+            errorDiv.textContent = mensaje;
+            errorDiv.classList.remove('hidden');
+        }
+
+        function limpiarError(paso) {
+            const errorDiv = document.getElementById(`error-${paso}`);
+            errorDiv.classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

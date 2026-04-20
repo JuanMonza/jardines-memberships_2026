@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación de Membresía - Jardines del Renacer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'jardines-blue': '#3957b8',
+                        'jardines-dark': '#2a3f8a',
+                        'jardines-gold': '#D4AF37',
+                        'active-status': '#22C55E',
+                        'inactive-status': '#DC2626',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-jardines-dark via-jardines-blue to-blue-400 min-h-screen font-sans">
+
+    <!-- Encabezado -->
+    <header class="text-center py-8">
+        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-8 max-w-md mx-auto">
+            <i class="fas fa-crown text-jardines-gold text-5xl mb-4 block"></i>
+            <p class="text-jardines-gold text-lg font-semibold">Club de Aliados</p>
+            <p class="text-white/80 text-base mt-1">Sistema de Verificación de Membresía</p>
+        </div>
+    </header>
+
+    <!-- Formulario de Búsqueda -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl mx-auto">
+            <h1 class="text-3xl font-bold text-jardines-blue mb-2">¿Eres Miembro?</h1>
+            <p class="text-gray-600 mb-8">Ingresa tu número de cédula para verificar tu estado</p>
+
+            <!-- Input de Búsqueda -->
+            <div class="flex gap-2 mb-8">
+                <input 
+                    type="text" 
+                    id="cedula-input" 
+                    placeholder="Ej: 1234567890" 
+                    maxlength="20"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                    class="flex-1 px-4 py-3 border-2 border-jardines-blue rounded-lg focus:outline-none focus:ring-2 focus:ring-jardines-blue text-lg"
+                    onkeypress="if(event.key === 'Enter') buscarContratante()">
+                <button 
+                    onclick="buscarContratante()" 
+                    class="bg-jardines-blue text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-bold transition">
+                    <i class="fas fa-search mr-2"></i>Buscar
+                </button>
+            </div>
+
+            <!-- Resultado -->
+            <div id="resultado" class="hidden">
+                <div id="resultado-content" class="bg-green-50 border-2 border-green-500 rounded-lg p-8"></div>
+            </div>
+
+            <!-- Error -->
+            <div id="error" class="hidden">
+                <div class="bg-red-50 border-2 border-red-500 rounded-lg p-8">
+                    <p class="text-red-600 font-bold text-center">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        <span id="error-text"></span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Información Adicional -->
+            <div class="mt-12 pt-8 border-t border-gray-200">
+                <h3 class="text-lg font-bold text-jardines-blue mb-4">¿Necesitas ayuda?</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex gap-3 p-4 bg-blue-50 rounded-lg">
+                        <i class="fas fa-phone text-jardines-blue text-xl flex-shrink-0 mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-jardines-blue">Teléfono</p>
+                            <p class="text-gray-600 text-sm">+57 (5) XXXX-XXXX</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3 p-4 bg-blue-50 rounded-lg">
+                        <i class="fas fa-envelope text-jardines-blue text-xl flex-shrink-0 mt-1"></i>
+                        <div>
+                            <p class="font-semibold text-jardines-blue">Email</p>
+                            <p class="text-gray-600 text-sm">info@jardinesdelrenacer.co</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+
+        async function buscarContratante() {
+            const cedula = document.getElementById('cedula-input').value.trim();
+
+            if (!cedula) {
+                mostrarError('Por favor ingresa tu número de cédula');
+                return;
+            }
+
+            document.getElementById('resultado').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+
+            try {
+                const response = await fetch(`${API_URL}/contratantes?cedula=${cedula}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    mostrarResultado(data.data);
+                } else {
+                    mostrarError(data.message || 'No se encontró información');
+                }
+            } catch (error) {
+                mostrarError('Error de conexión. Intenta más tarde.');
+                console.error('Error:', error);
+            }
+        }
+
+        function mostrarResultado(contratante) {
+            const estadoColor = contratante.estado === 'activo' ? 'green' : 'red';
+            const estadoIcon = contratante.estado === 'activo' ? 'check-circle' : 'times-circle';
+            const estadoTexto = contratante.estado === 'activo' ? '✅ ACTIVO' : '❌ INACTIVO';
+
+            const html = `
+                <div class="space-y-4">
+                    <div class="text-center">
+                        <i class="fas fa-${estadoIcon} text-5xl mb-4 block" style="color: ${estadoColor === 'green' ? '#22C55E' : '#DC2626'}"></i>
+                        <p class="text-2xl font-bold ${estadoColor === 'green' ? 'text-green-600' : 'text-red-600'}">${estadoTexto}</p>
+                    </div>
+
+                    <div class="border-t-2 pt-4">
+                        <h3 class="font-bold text-xl text-jardines-blue mb-4">Información del Contratante</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-3 bg-gray-50 rounded">
+                                <p class="text-gray-600 text-xs font-semibold uppercase">Nombre</p>
+                                <p class="font-bold text-gray-900">${contratante.nombre_contratante}</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded">
+                                <p class="text-gray-600 text-xs font-semibold uppercase">ID Contrato</p>
+                                <p class="font-bold text-gray-900">${contratante.id_contrato}</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded">
+                                <p class="text-gray-600 text-xs font-semibold uppercase">ID Persona</p>
+                                <p class="font-bold text-gray-900">${contratante.id_persona}</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded">
+                                <p class="text-gray-600 text-xs font-semibold uppercase">Celular</p>
+                                <p class="font-bold text-gray-900">${contratante.celular}</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded">
+                                <p class="text-gray-600 text-xs font-semibold uppercase">Edad</p>
+                                <p class="font-bold text-gray-900">${contratante.edad_actual} años</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded">
+                                <p class="text-gray-600 text-xs font-semibold uppercase">Zona</p>
+                                <p class="font-bold text-gray-900">${contratante.zona}</p>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded md:col-span-2">
+                                <p class="text-gray-600 text-xs font-semibold uppercase">Ubicación</p>
+                                <p class="font-bold text-gray-900">${contratante.ciudad}, ${contratante.departamento}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('resultado-content').innerHTML = html;
+            document.getElementById('resultado').classList.remove('hidden');
+        }
+
+        function mostrarError(mensaje) {
+            document.getElementById('error-text').textContent = mensaje;
+            document.getElementById('error').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

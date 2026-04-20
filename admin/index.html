@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrativo - Jardines del Renacer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'jardines-blue': '#3957b8',
+                        'jardines-gold': '#D4AF37',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-100">
+    <!-- Navegación -->
+    <nav class="bg-jardines-blue text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-crown text-jardines-gold text-2xl"></i>
+                <span class="text-xl font-bold">Jardines Admin</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="admin-name"></span>
+                <button onclick="logout()" class="bg-red-600 px-4 py-2 rounded hover:bg-red-700">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container mx-auto p-4">
+        <!-- Tabs de Navegación -->
+        <div class="flex gap-4 mb-6 mt-4">
+            <button onclick="mostrarTab('dashboard')" class="tab-btn bg-jardines-blue text-white px-6 py-2 rounded active">
+                <i class="fas fa-chart-bar mr-2"></i>Dashboard
+            </button>
+            <button onclick="mostrarTab('cargar')" class="tab-btn bg-white text-jardines-blue px-6 py-2 rounded border border-jardines-blue hover:bg-blue-50">
+                <i class="fas fa-upload mr-2"></i>Cargar Excel
+            </button>
+            <button onclick="mostrarTab('contratantes')" class="tab-btn bg-white text-jardines-blue px-6 py-2 rounded border border-jardines-blue hover:bg-blue-50">
+                <i class="fas fa-users mr-2"></i>Contratantes
+            </button>
+        </div>
+
+        <!-- Tab: Dashboard -->
+        <div id="dashboard" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white p-6 rounded shadow">
+                    <h3 class="text-gray-600 text-sm">Total Contratantes</h3>
+                    <p class="text-3xl font-bold text-jardines-blue" id="total-contratantes">0</p>
+                </div>
+                <div class="bg-white p-6 rounded shadow">
+                    <h3 class="text-gray-600 text-sm">Activos</h3>
+                    <p class="text-3xl font-bold text-green-600" id="contratantes-activos">0</p>
+                </div>
+                <div class="bg-white p-6 rounded shadow">
+                    <h3 class="text-gray-600 text-sm">Inactivos</h3>
+                    <p class="text-3xl font-bold text-red-600" id="contratantes-inactivos">0</p>
+                </div>
+                <div class="bg-white p-6 rounded shadow">
+                    <h3 class="text-gray-600 text-sm">Último Login</h3>
+                    <p class="text-sm font-semibold" id="ultimo-login">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Cargar Excel -->
+        <div id="cargar" class="tab-content hidden">
+            <div class="bg-white p-6 rounded shadow">
+                <h2 class="text-2xl font-bold mb-4 text-jardines-blue">Cargar Contratantes</h2>
+                <form id="excel-form" class="space-y-4">
+                    <div class="border-2 border-dashed border-jardines-blue rounded p-6 text-center">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-jardines-blue mb-4"></i>
+                        <p class="mb-2">Arrastra tu archivo Excel aquí o haz clic</p>
+                        <input type="file" id="excel-file" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileSelect(event)">
+                        <button type="button" onclick="document.getElementById('excel-file').click()" class="bg-jardines-blue text-white px-4 py-2 rounded hover:bg-blue-700">
+                            Seleccionar Archivo
+                        </button>
+                    </div>
+                    <div id="file-info" class="hidden">
+                        <p><strong>Archivo:</strong> <span id="file-name"></span></p>
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 font-bold">
+                        <i class="fas fa-upload mr-2"></i>Cargar Contratantes
+                    </button>
+                </form>
+                <div id="upload-status" class="mt-4"></div>
+            </div>
+        </div>
+
+        <!-- Tab: Contratantes -->
+        <div id="contratantes" class="tab-content hidden">
+            <div class="bg-white p-6 rounded shadow">
+                <h2 class="text-2xl font-bold mb-4 text-jardines-blue">Gestionar Contratantes</h2>
+                <table class="w-full border-collapse">
+                    <thead>
+                        <tr class="bg-jardines-blue text-white">
+                            <th class="border p-2 text-left">Nombre</th>
+                            <th class="border p-2 text-left">Cédula</th>
+                            <th class="border p-2 text-left">ID Contrato</th>
+                            <th class="border p-2 text-left">Zona</th>
+                            <th class="border p-2 text-left">Estado</th>
+                            <th class="border p-2 text-left">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contratantes-table"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+        let token = localStorage.getItem('token');
+
+        // Login inicial
+        if (!token) {
+            mostrarLogin();
+        } else {
+            cargarDashboard();
+        }
+
+        function mostrarTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('bg-jardines-blue', 'text-white'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.add('bg-white', 'text-jardines-blue', 'border', 'border-jardines-blue', 'hover:bg-blue-50'));
+            
+            document.getElementById(tab).classList.remove('hidden');
+            event.target.closest('.tab-btn').classList.add('bg-jardines-blue', 'text-white');
+            event.target.closest('.tab-btn').classList.remove('bg-white', 'text-jardines-blue', 'border', 'border-jardines-blue', 'hover:bg-blue-50');
+        }
+
+        async function cargarDashboard() {
+            try {
+                const response = await fetch(`${API_URL}/contratantes?limite=100`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('total-contratantes').textContent = data.data.length;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('file-name').textContent = file.name;
+                document.getElementById('file-info').classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('excel-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('excel-file').files[0];
+            
+            if (!file) {
+                alert('Selecciona un archivo');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('archivo', file);
+            formData.append('adminId', 'current-admin-id');
+
+            try {
+                const response = await fetch(`${API_URL}/upload/contratantes`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const data = await response.json();
+                
+                document.getElementById('upload-status').innerHTML = `
+                    <div class="p-4 rounded ${data.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                        <p>${data.message}</p>
+                        <p class="text-sm mt-2">Exitosos: ${data.resultados?.exitosos} | Errores: ${data.resultados?.errores}</p>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('upload-status').innerHTML = `<div class="p-4 rounded bg-red-100 text-red-800">Error: ${error.message}</div>`;
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('admin');
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>
