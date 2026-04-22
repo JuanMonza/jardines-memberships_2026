@@ -3,182 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verificación de Membresía - Jardines del Renacer</title>
+    <title>Jardines del Renacer - Búsqueda de Membresía</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'jardines-blue': '#3957b8',
-                        'jardines-dark': '#2a3f8a',
-                        'jardines-gold': '#D4AF37',
-                        'active-status': '#22C55E',
-                        'inactive-status': '#DC2626',
-                    }
-                }
-            }
+    <style>
+        /* Tipografía estilo Apple */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
         }
-    </script>
+        
+        /* Fondo Líquido / Mesh Gradient Azul */
+        .bg-liquid {
+            background-color: #003366;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(217,100%,50%,0.8) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(200,100%,30%,0.9) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(220,100%,40%,0.7) 0, transparent 50%),
+                radial-gradient(at 50% 100%, hsla(210,100%,20%,1) 0, transparent 50%);
+            background-attachment: fixed;
+            background-size: cover;
+        }
+
+        /* Glassmorphism Card (iOS Style) */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        /* Contenedor del Logo Cristalino */
+        .logo-container {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Input de Cristal */
+        .glass-input {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: #0056b3;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(0, 86, 179, 0.15), inset 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        /* Botón de Cristal Azul */
+        .glass-btn {
+            background: rgba(0, 64, 128, 0.85); /* Azul Jardines */
+            color: white;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 20px rgba(0, 43, 94, 0.3);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .glass-btn:hover {
+            background: rgba(0, 43, 94, 0.95);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 43, 94, 0.4);
+        }
+        .glass-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 10px rgba(0, 43, 94, 0.3);
+        }
+
+        /* Loader iOS Style */
+        .loader {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid #ffffff;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Círculos decorativos de fondo */
+        .blob-1 { position: absolute; width: 300px; height: 300px; background: rgba(0, 102, 255, 0.4); border-radius: 50%; filter: blur(80px); top: -100px; left: -100px; z-index: 0; }
+        .blob-2 { position: absolute; width: 400px; height: 400px; background: rgba(0, 204, 255, 0.3); border-radius: 50%; filter: blur(100px); bottom: -150px; right: -100px; z-index: 0; }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-jardines-dark via-jardines-blue to-blue-400 min-h-screen font-sans">
+<body class="bg-liquid min-h-screen flex items-center justify-center p-4 relative">
 
-    <!-- Encabezado -->
-    <header class="text-center py-8">
-        <div class="bg-white/10 backdrop-blur-md rounded-2xl p-8 max-w-md mx-auto">
-            <i class="fas fa-crown text-jardines-gold text-5xl mb-4 block"></i>
-            <p class="text-jardines-gold text-lg font-semibold">Club de Aliados</p>
-            <p class="text-white/80 text-base mt-1">Sistema de Verificación de Membresía</p>
+    <!-- Elementos líquidos de fondo -->
+    <div class="blob-1 pointer-events-none"></div>
+    <div class="blob-2 pointer-events-none"></div>
+
+    <div class="glass-card w-full max-w-md rounded-[2rem] p-8 relative z-10">
+        <!-- Reflejo superior interior -->
+        <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-white/40 to-transparent rounded-t-[2rem] pointer-events-none"></div>
+
+        <div class="text-center mb-8 relative z-10">
+            <div class="logo-container p-4 rounded-2xl inline-block mb-5">
+                <img src="./logo-oficial.webp" alt="Logo Jardines del Renacer" class="h-16 mx-auto object-contain drop-shadow-sm" onerror="this.src='/logo-oficial.webp'">
+            </div>
+            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Consulta de Membresía</h1>
+            <p class="text-gray-600 mt-2 text-sm font-medium">Verifique su estado ingresando su documento</p>
         </div>
-    </header>
 
-    <!-- Formulario de Búsqueda -->
-    <div class="container mx-auto px-4 py-8">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl mx-auto">
-            <h1 class="text-3xl font-bold text-jardines-blue mb-2">¿Eres Miembro?</h1>
-            <p class="text-gray-600 mb-8">Ingresa tu número de cédula para verificar tu estado</p>
-
-            <!-- Input de Búsqueda -->
-            <div class="flex gap-2 mb-8">
-                <input 
-                    type="text" 
-                    id="cedula-input" 
-                    placeholder="Ej: 1234567890" 
-                    maxlength="20"
-                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                    class="flex-1 px-4 py-3 border-2 border-jardines-blue rounded-lg focus:outline-none focus:ring-2 focus:ring-jardines-blue text-lg"
-                    onkeypress="if(event.key === 'Enter') buscarContratante()">
-                <button 
-                    onclick="buscarContratante()" 
-                    class="bg-jardines-blue text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-bold transition">
-                    <i class="fas fa-search mr-2"></i>Buscar
-                </button>
+        <form id="searchForm" class="space-y-5 relative z-10">
+            <div>
+                <label for="cedula" class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Número de Cédula</label>
+                <input type="text" id="cedula" name="cedula" required
+                    class="glass-input block w-full px-5 py-3.5 rounded-xl text-lg font-semibold text-gray-800 placeholder-gray-400"
+                    placeholder="Ej. 1234567890">
             </div>
+            <button type="submit" id="submitBtn"
+                class="glass-btn w-full flex justify-center items-center py-3.5 px-4 rounded-xl text-lg font-semibold">
+                <span id="btnText">Consultar Estado</span>
+                <span id="btnLoader" class="loader hidden ml-3"></span>
+            </button>
+        </form>
 
-            <!-- Resultado -->
-            <div id="resultado" class="hidden">
-                <div id="resultado-content" class="bg-green-50 border-2 border-green-500 rounded-lg p-8"></div>
-            </div>
-
-            <!-- Error -->
-            <div id="error" class="hidden">
-                <div class="bg-red-50 border-2 border-red-500 rounded-lg p-8">
-                    <p class="text-red-600 font-bold text-center">
-                        <i class="fas fa-exclamation-circle mr-2"></i>
-                        <span id="error-text"></span>
-                    </p>
+        <div id="errorContainer" class="hidden mt-6 bg-red-50/80 backdrop-blur-md border border-red-200 p-4 rounded-xl shadow-sm relative z-10">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-red-100 rounded-full p-1">
+                    <svg class="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
                 </div>
+                <p id="errorText" class="ml-3 text-sm font-medium text-red-800"></p>
             </div>
+        </div>
 
-            <!-- Información Adicional -->
-            <div class="mt-12 pt-8 border-t border-gray-200">
-                <h3 class="text-lg font-bold text-jardines-blue mb-4">¿Necesitas ayuda?</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="flex gap-3 p-4 bg-blue-50 rounded-lg">
-                        <i class="fas fa-phone text-jardines-blue text-xl flex-shrink-0 mt-1"></i>
-                        <div>
-                            <p class="font-semibold text-jardines-blue">Teléfono</p>
-                            <p class="text-gray-600 text-sm">+57 (5) XXXX-XXXX</p>
-                        </div>
-                    </div>
-                    <div class="flex gap-3 p-4 bg-blue-50 rounded-lg">
-                        <i class="fas fa-envelope text-jardines-blue text-xl flex-shrink-0 mt-1"></i>
-                        <div>
-                            <p class="font-semibold text-jardines-blue">Email</p>
-                            <p class="text-gray-600 text-sm">info@jardinesdelrenacer.co</p>
-                        </div>
-                    </div>
+        <div id="resultContainer" class="hidden mt-6 bg-white/60 backdrop-blur-lg border border-white/80 rounded-2xl p-6 shadow-sm relative z-10 transition-all duration-500 ease-out">
+            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-200/60 pb-3 mb-4">Detalles del Contratante</h3>
+            <dl class="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+                <div class="sm:col-span-2">
+                    <dt class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Nombre Completo</dt>
+                    <dd id="resNombre" class="mt-1 text-xl text-gray-900 font-bold tracking-tight"></dd>
                 </div>
-            </div>
+                <div>
+                    <dt class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Estado</dt>
+                    <dd class="mt-1">
+                        <span id="resEstado" class="px-3 py-1 inline-flex text-xs font-bold rounded-full shadow-sm">
+                        </span>
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Celular</dt>
+                    <dd id="resCelular" class="mt-1 text-sm font-semibold text-gray-800"></dd>
+                </div>
+                <div>
+                    <dt class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Ciudad</dt>
+                    <dd id="resCiudad" class="mt-1 text-sm font-semibold text-gray-800"></dd>
+                </div>
+                <div>
+                    <dt class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Departamento</dt>
+                    <dd id="resDepto" class="mt-1 text-sm font-semibold text-gray-800"></dd>
+                </div>
+                <div>
+                    <dt class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">ID Contrato</dt>
+                    <dd id="resContrato" class="mt-1 text-sm font-semibold text-gray-600"></dd>
+                </div>
+            </dl>
         </div>
     </div>
 
     <script>
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const cedula = document.getElementById('cedula').value.trim();
+            if (!cedula) return;
 
-        async function buscarContratante() {
-            const cedula = document.getElementById('cedula-input').value.trim();
+            const btnText = document.getElementById('btnText');
+            const btnLoader = document.getElementById('btnLoader');
+            const submitBtn = document.getElementById('submitBtn');
+            const resultContainer = document.getElementById('resultContainer');
+            const errorContainer = document.getElementById('errorContainer');
+            const errorText = document.getElementById('errorText');
 
-            if (!cedula) {
-                mostrarError('Por favor ingresa tu número de cédula');
-                return;
-            }
-
-            document.getElementById('resultado').classList.add('hidden');
-            document.getElementById('error').classList.add('hidden');
+            // Efecto de transición
+            resultContainer.style.opacity = '0';
+            setTimeout(() => resultContainer.classList.add('hidden'), 300);
+            errorContainer.classList.add('hidden');
+            
+            submitBtn.disabled = true;
+            btnText.textContent = 'Consultando...';
+            btnLoader.classList.remove('hidden');
 
             try {
-                const response = await fetch(`${API_URL}/contratantes?cedula=${cedula}`);
+                const response = await fetch(`/api/contratantes?cedula=${encodeURIComponent(cedula)}`);
                 const data = await response.json();
 
-                if (data.success) {
-                    mostrarResultado(data.data);
+                if (response.ok && data.success) {
+                    const info = data.data;
+                    document.getElementById('resNombre').textContent = info.nombre_contratante || info.nombre || 'N/A';
+                    
+                    const estado = info.estado || 'N/A';
+                    const estadoEl = document.getElementById('resEstado');
+                    estadoEl.textContent = estado.toUpperCase();
+                    
+                    // Badges de estado con estilo cristal
+                    if (estado.toLowerCase() === 'activo') {
+                        estadoEl.className = 'px-3 py-1 inline-flex text-xs font-bold rounded-full bg-green-500/20 text-green-700 border border-green-500/30 backdrop-blur-md';
+                    } else {
+                        estadoEl.className = 'px-3 py-1 inline-flex text-xs font-bold rounded-full bg-red-500/20 text-red-700 border border-red-500/30 backdrop-blur-md';
+                    }
+
+                    document.getElementById('resCelular').textContent = info.celular || 'N/A';
+                    document.getElementById('resCiudad').textContent = info.ciudad || 'N/A';
+                    document.getElementById('resDepto').textContent = info.departamento || 'N/A';
+                    document.getElementById('resContrato').textContent = info.id_contrato || 'N/A';
+
+                    resultContainer.classList.remove('hidden');
+                    // Fade in effect
+                    setTimeout(() => resultContainer.style.opacity = '1', 50);
                 } else {
-                    mostrarError(data.message || 'No se encontró información');
+                    errorText.textContent = data.error || 'No se encontró información para la cédula ingresada.';
+                    errorContainer.classList.remove('hidden');
                 }
-            } catch (error) {
-                mostrarError('Error de conexión. Intenta más tarde.');
-                console.error('Error:', error);
+            } catch (err) {
+                errorText.textContent = 'Hubo un error al conectar con el servidor. Intente de nuevo más tarde.';
+                errorContainer.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                btnText.textContent = 'Consultar Estado';
+                btnLoader.classList.add('hidden');
             }
-        }
-
-        function mostrarResultado(contratante) {
-            const estadoColor = contratante.estado === 'activo' ? 'green' : 'red';
-            const estadoIcon = contratante.estado === 'activo' ? 'check-circle' : 'times-circle';
-            const estadoTexto = contratante.estado === 'activo' ? '✅ ACTIVO' : '❌ INACTIVO';
-
-            const html = `
-                <div class="space-y-4">
-                    <div class="text-center">
-                        <i class="fas fa-${estadoIcon} text-5xl mb-4 block" style="color: ${estadoColor === 'green' ? '#22C55E' : '#DC2626'}"></i>
-                        <p class="text-2xl font-bold ${estadoColor === 'green' ? 'text-green-600' : 'text-red-600'}">${estadoTexto}</p>
-                    </div>
-
-                    <div class="border-t-2 pt-4">
-                        <h3 class="font-bold text-xl text-jardines-blue mb-4">Información del Contratante</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="p-3 bg-gray-50 rounded">
-                                <p class="text-gray-600 text-xs font-semibold uppercase">Nombre</p>
-                                <p class="font-bold text-gray-900">${contratante.nombre_contratante}</p>
-                            </div>
-                            <div class="p-3 bg-gray-50 rounded">
-                                <p class="text-gray-600 text-xs font-semibold uppercase">ID Contrato</p>
-                                <p class="font-bold text-gray-900">${contratante.id_contrato}</p>
-                            </div>
-                            <div class="p-3 bg-gray-50 rounded">
-                                <p class="text-gray-600 text-xs font-semibold uppercase">ID Persona</p>
-                                <p class="font-bold text-gray-900">${contratante.id_persona}</p>
-                            </div>
-                            <div class="p-3 bg-gray-50 rounded">
-                                <p class="text-gray-600 text-xs font-semibold uppercase">Celular</p>
-                                <p class="font-bold text-gray-900">${contratante.celular}</p>
-                            </div>
-                            <div class="p-3 bg-gray-50 rounded">
-                                <p class="text-gray-600 text-xs font-semibold uppercase">Edad</p>
-                                <p class="font-bold text-gray-900">${contratante.edad_actual} años</p>
-                            </div>
-                            <div class="p-3 bg-gray-50 rounded">
-                                <p class="text-gray-600 text-xs font-semibold uppercase">Zona</p>
-                                <p class="font-bold text-gray-900">${contratante.zona}</p>
-                            </div>
-                            <div class="p-3 bg-gray-50 rounded md:col-span-2">
-                                <p class="text-gray-600 text-xs font-semibold uppercase">Ubicación</p>
-                                <p class="font-bold text-gray-900">${contratante.ciudad}, ${contratante.departamento}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('resultado-content').innerHTML = html;
-            document.getElementById('resultado').classList.remove('hidden');
-        }
-
-        function mostrarError(mensaje) {
-            document.getElementById('error-text').textContent = mensaje;
-            document.getElementById('error').classList.remove('hidden');
-        }
+        });
     </script>
 </body>
 </html>
