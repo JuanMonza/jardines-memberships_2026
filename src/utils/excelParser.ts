@@ -1,4 +1,4 @@
-import { XLSX } from 'xlsx';
+import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabaseClient';
 
 export const procesarExcelContratantes = async (
@@ -8,7 +8,8 @@ export const procesarExcelContratantes = async (
     try {
         const workbook = XLSX.read(archivo, { type: 'buffer' });
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        const datos = XLSX.utils.sheet_to_json(worksheet);
+        // Forzamos el tipo a Record para que TypeScript sepa que son objetos
+        const datos = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet);
 
         const resultados = {
             exitosos: 0,
@@ -20,14 +21,14 @@ export const procesarExcelContratantes = async (
             try {
                 const { error } = await supabase.from('contratantes').insert({
                     nombre_contratante: fila.nombreContratante || '',
-                    cedula: fila.cedula?.toString().trim() || '',
-                    id_contrato: fila.idContrato?.toString().trim() || '',
-                    id_persona: fila.idPersona || '',
-                    celular: fila.celular || '',
+                    cedula: fila.cedula?.toString()?.trim() || '',
+                    id_contrato: fila.idContrato?.toString()?.trim() || '',
+                    id_persona: fila.idPersona?.toString() || '',
+                    celular: fila.celular?.toString() || '',
                     email: fila.email || '',
                     edad_actual: parseInt(fila.edadActual) || 0,
                     fecha_nacimiento: fila.fechaNacimiento || null,
-                    estado: fila.estado?.toLowerCase() === 'activo' ? 'activo' : 'inactivo',
+                    estado: fila.estado?.toString()?.toLowerCase() === 'activo' ? 'activo' : 'inactivo',
                     zona: fila.zona || '',
                     ciudad: fila.ciudad || '',
                     departamento: fila.departamento || '',
