@@ -22,16 +22,16 @@ import { generarToken, hashPassword, compararPassword } from '../src/utils/auth'
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Solo aceptamos método POST
     if (req.method === 'POST') {
-        const { email, password, nombre, accion, codigo2FA } = req.body;
+        const { email, password, nombre, accion, codigo2FA, rol } = req.body;
 
         // ACCIÓN: REGISTRO DE NUEVO ADMINISTRADOR
         if (accion === 'registro') {
             try {
                 // Validación: Solo correos corporativos permitidos
-                if (!email.endsWith('@jardinesdelrenacer.co')) {
+                if (!email.endsWith('@jardinesdelrenacer.co') && !email.endsWith('@mivivemas.co')) {
                     return res.status(400).json({
                         success: false,
-                        message: 'Solo correos corporativos (@jardinesdelrenacer.co)'
+                        message: 'Solo correos corporativos autorizados'
                     });
                 }
 
@@ -67,7 +67,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         email,
                         password_hash: passwordHash,
                         nombre,
-                        rol: 'supervisor', // Rol por defecto
+                        rol: rol === 'admin' ? 'admin' : 'supervisor', // Asignar rol dinámicamente
                         activo: true // Administrador activo por defecto
                     })
                     .select()
