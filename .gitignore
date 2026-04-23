@@ -106,3 +106,4 @@ node_modules/
 
 # Ignorar ejemplos de entorno por seguridad local (si existen)
 .env.local.example
+.vercel

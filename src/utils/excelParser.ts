@@ -8,6 +8,8 @@ export const procesarExcelContratantes = async (
     try {
         const workbook = XLSX.read(archivo, { type: 'buffer' });
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+        
         // Forzamos el tipo a Record para que TypeScript sepa que son objetos
         const datos = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet);
 
