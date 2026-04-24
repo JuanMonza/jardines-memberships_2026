@@ -104,12 +104,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     message: 'Falta configurar credenciales de Supabase en Vercel'
                 });
             }
+            /* -- COMENTADO PARA BYPASS DE 2FA --
             if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
                 return res.status(500).json({
                     success: false,
                     message: 'Falta configurar EMAIL_USER y EMAIL_PASS en Vercel'
                 });
             }
+            */
 
             try {
                 const { data: admin, error } = await supabase
@@ -138,7 +140,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     });
                 }
 
-                const codigo = generarCodigo2FA();
+                // CÓDIGO 2FA DINÁMICO: Fecha de hoy (DDMMAA)
+                const hoy = new Date();
+                const dia = String(hoy.getDate()).padStart(2, '0');
+                const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+                const anio = String(hoy.getFullYear()).slice(-2);
+                const codigo = `${dia}${mes}${anio}`;
+
                 const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
                 const { error: updateError } = await supabase
@@ -154,6 +162,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     throw new Error(`Error en Base de Datos: ${updateError.message}`);
                 }
 
+                /* -- COMENTADO PARA NO ENVIAR EMAILS --
                 const emailEnviado = await enviarCodigo2FA(email, codigo);
 
                 if (!emailEnviado) {
@@ -162,12 +171,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                         message: 'Error de Gmail: Revisa el App Password en Vercel'
                     });
                 }
+                */
 
                 const tempToken = generarToken(admin.id);
 
                 return res.status(200).json({
                     success: true,
-                    message: 'Código enviado. Verifica tu email en 10 minutos.',
+                    message: 'Ingresa la fecha de hoy (DDMMAA)',
                     tempToken,
                     adminId: admin.id
                 });
@@ -208,7 +218,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 if (admin.codigo_2fa !== codigo) {
                     return res.status(401).json({
                         success: false,
-                        message: 'Código inválido'
+                        message: 'Código inválido. Usa la fecha actual (DDMMAA)'
                     });
                 }
 
@@ -222,7 +232,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                     })
                     .eq('id', adminId);
 
-                await enviarConfirmacionLogin(admin.email);
+                // await enviarConfirmacionLogin(admin.email); // COMENTADO PARA NO ENVIAR EMAILS
 
                 const token = generarToken(adminId);
 
