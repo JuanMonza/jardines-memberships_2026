@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS admins (
     ultimo_login TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT email_domain CHECK (email LIKE '%@jardinesdelrenacer.co')
+    CONSTRAINT email_domain CHECK (email LIKE '%@jardinesdelrenacer.co' OR email LIKE '%@mivivemas.co')
 );
 
 -- Crear tabla de contratantes
