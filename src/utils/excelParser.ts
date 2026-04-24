@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../lib/supabaseClient.js';
 
 export const procesarExcelContratantes = async (
     archivo: Buffer,

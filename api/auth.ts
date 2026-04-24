@@ -14,9 +14,9 @@
  */
 
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase } from '../src/lib/supabaseClient';
-import { generarCodigo2FA, enviarCodigo2FA, enviarConfirmacionLogin } from '../src/utils/emailService';
-import { generarToken, hashPassword, compararPassword } from '../src/utils/auth';
+import { supabase } from '../src/lib/supabaseClient.js';
+import { generarCodigo2FA, enviarCodigo2FA, enviarConfirmacionLogin } from '../src/utils/emailService.js';
+import { generarToken, hashPassword, compararPassword } from '../src/utils/auth.js';
 
 // Función principal que maneja todas las peticiones POST a /api/auth
 export default async function handler(req: VercelRequest, res: VercelResponse) {

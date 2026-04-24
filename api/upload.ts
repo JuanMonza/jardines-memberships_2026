@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import formidable from 'formidable';
 import fs from 'fs';
-import { procesarExcelContratantes } from '../src/utils/excelParser';
+import { procesarExcelContratantes } from '../src/utils/excelParser.js';
 
 export const config = {
     api: {
