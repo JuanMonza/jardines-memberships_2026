@@ -127,7 +127,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 if (!admin) {
                     return res.status(401).json({
                         success: false,
-                        message: 'Email o contraseña incorrectos'
+                        message: 'El correo no existe en la base de datos'
                     });
                 }
 
@@ -136,7 +136,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 if (!passwordValida) {
                     return res.status(401).json({
                         success: false,
-                        message: 'Email o contraseña incorrectos'
+                        message: 'La contraseña ingresada es incorrecta'
                     });
                 }
 
