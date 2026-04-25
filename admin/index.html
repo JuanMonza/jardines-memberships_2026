@@ -274,10 +274,11 @@
                 const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                 const filas = XLSX.utils.sheet_to_json(worksheet);
                 
-                const tamanoLote = 1500; // Lote reducido para evitar Error 504 (Gateway Timeout) en Vercel
+                const tamanoLote = 200; // Lote seguro para no saturar Supabase ni Vercel
                 let exitosos = 0;
                 let errores = 0;
                 let huboFalloCritico = false;
+                let primerErrorMensaje = '';
 
                 // 2. Enviar a Vercel por lotes pequeños
                 for (let i = 0; i < filas.length; i += tamanoLote) {
@@ -294,6 +295,9 @@
                     if (result.success) {
                         exitosos += result.resultados.exitosos;
                         errores += result.resultados.errores;
+                        if (result.resultados.errores > 0 && !primerErrorMensaje && result.resultados.detalles && result.resultados.detalles.length > 0) {
+                            primerErrorMensaje = result.resultados.detalles[0].error;
+                        }
                     } else {
                         huboFalloCritico = true;
                         throw new Error(result.error || result.message || "Error en el lote");
@@ -303,7 +307,8 @@
                 if (!huboFalloCritico) {
                     resultDiv.classList.add('bg-green-50/80', 'text-green-800', 'border-green-200');
                     resultDiv.innerHTML = `<div class="flex"><i data-lucide="check-circle" class="w-5 h-5 mr-2 text-green-600 flex-shrink-0"></i><div><strong>¡Carga Completada!</strong> Todos los datos fueron procesados. <br> 
-                                           <span class="text-xs font-semibold text-green-700 mt-1 inline-block">Registros Guardados: ${exitosos} | Errores: ${errores}</span></div></div>`;
+                                           <span class="text-xs font-semibold text-green-700 mt-1 inline-block">Registros Guardados: ${exitosos} | Errores: ${errores}</span>
+                                           ${errores > 0 ? `<br><span class="text-xs text-red-600 mt-1 font-bold block">Motivo del error: ${primerErrorMensaje}</span>` : ''}</div></div>`;
                     archivoInput.value = ''; 
                     document.getElementById('fileName').textContent = 'o arrastra y suelta aquí';
                 }
