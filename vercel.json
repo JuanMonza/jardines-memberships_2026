@@ -1,17 +1,13 @@
 {
-  "version": 2,
-  "devCommand": "node -v",
-  "buildCommand": "npm run build",
-  "functions": {
-    "api/**/*.ts": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
-  "redirects": [
+  "cleanUrls": true,
+  "rewrites": [
     {
-      "source": "/",
-      "destination": "/public/index.html"
+      "source": "/public",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/public/index.html",
+      "destination": "/index.html"
     }
   ]
 }
