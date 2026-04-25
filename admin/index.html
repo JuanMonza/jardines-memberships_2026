@@ -274,7 +274,7 @@
                 const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                 const filas = XLSX.utils.sheet_to_json(worksheet);
                 
-                const tamanoLote = 500;
+                const tamanoLote = 1500; // Lote reducido para evitar Error 504 (Gateway Timeout) en Vercel
                 let exitosos = 0;
                 let errores = 0;
                 let huboFalloCritico = false;
